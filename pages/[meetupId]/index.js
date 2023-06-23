@@ -19,12 +19,19 @@ const DUMMY_MEETUPS = [
     address: "Some address 10,12345 Some City",
     description: "This is a second meetup!!",
   },
+  {
+    id: "m3",
+    title: "A Third Meetup",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Stadtbild_M%C3%BCnchen.jpg/1280px-Stadtbild_M%C3%BCnchen.jpg",
+    address: "Some address 15,12345 Some City",
+    description: "This is a third meetup!!",
+  },
 ];
 
-function showDetails() {
-  const router = useRouter();
-  const id = router.query.meetupId;
-  const meetup = DUMMY_MEETUPS.find((meetup) => meetup.id === id);
+function showDetails(props) {
+  const id = props.meetupData.id;
+  const meetup = props.meetupData.data.find((meetup) => meetup.id === id);
   if (meetup) {
     return (
       <li className={classes.item}>
@@ -41,4 +48,42 @@ function showDetails() {
     );
   }
 }
+
+export async function getStaticPaths() {
+  return {
+    fallback: false,
+    paths: [
+      {
+        params: {
+          meetupId: "m1",
+        },
+      },
+      {
+        params: {
+          meetupId: "m2",
+        },
+      },
+      {
+        params: {
+          meetupId: "m3",
+        },
+      },
+    ],
+  };
+}
+
+export function getStaticProps(context) {
+  //fetch data for a single meetup
+
+  const meetupId = context.params.meetupId;
+  return {
+    props: {
+      meetupData: {
+        id: meetupId,
+        data: DUMMY_MEETUPS,
+      },
+    },
+  };
+}
+
 export default showDetails;
