@@ -2,6 +2,8 @@ import { useRouter } from "next/router";
 import Card from "@/components/ui/Card";
 import classes from "../../styles/Home.module.css";
 import { MongoClient } from "mongodb";
+import { Fragment } from "react";
+import Head from "next/head";
 
 function showDetails(props) {
   const router = useRouter();
@@ -10,46 +12,28 @@ function showDetails(props) {
     const meetup = props.meetupData.find((meetup) => meetup.id === id);
 
     return (
-      <li className={classes.item}>
-        <Card>
-          <div className={classes.image}>
-            <img src={meetup.image} alt={meetup.title} />
-          </div>
-          <div className={classes.content}>
-            <h3>{meetup.title}</h3>
-            <address>{meetup.address}</address>
-          </div>
-        </Card>
-      </li>
+      <Fragment>
+        <Head>
+          <title>{meetup.title}</title>
+          <meta name="description" content={meetup.description} />
+        </Head>
+        <li className={classes.item}>
+          <Card>
+            <div className={classes.image}>
+              <img src={meetup.image} alt={meetup.title} />
+            </div>
+            <div className={classes.content}>
+              <h3>{meetup.title}</h3>
+              <address>{meetup.address}</address>
+            </div>
+          </Card>
+        </li>
+      </Fragment>
     );
   }
 }
 
 export async function getStaticPaths() {
-  return {
-    fallback: false,
-    paths: [
-      {
-        params: {
-          meetupId: "m1",
-        },
-      },
-      {
-        params: {
-          meetupId: "m2",
-        },
-      },
-      {
-        params: {
-          meetupId: "m3",
-        },
-      },
-    ],
-  };
-}
-
-export async function getStaticProps(context) {
-  //fetch data for a single meetup
   const client = await MongoClient.connect(
     "mongodb+srv://swati:swati4s@cluster0.or8j6ek.mongodb.net/meetups"
   );
@@ -60,6 +44,27 @@ export async function getStaticProps(context) {
   const meetups = await meetupsCollection.find().toArray();
 
   client.close();
+  return {
+    fallback: "blocking",
+    paths: meetups.map((meetup) => ({
+      params: { meetupId: meetup._id.toString() },
+    })),
+  };
+}
+
+export async function getStaticProps() {
+  //fetch data from an API
+  const client = await MongoClient.connect(
+    "mongodb+srv://swati:swati4s@cluster0.or8j6ek.mongodb.net/meetups"
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection("meetups");
+
+  const meetups = await meetupsCollection.find().toArray();
+
+  client.close();
+
   return {
     props: {
       meetupData: meetups.map((meetup) => ({
