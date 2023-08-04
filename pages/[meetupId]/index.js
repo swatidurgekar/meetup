@@ -5,6 +5,32 @@ import { MongoClient } from "mongodb";
 import { Fragment } from "react";
 import Head from "next/head";
 
+export async function getStaticProps() {
+  //fetch data from an API
+  const client = await MongoClient.connect(
+    "mongodb+srv://swati:swati4s@cluster0.or8j6ek.mongodb.net/meetups"
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection("meetups");
+
+  const meetups = await meetupsCollection.find().toArray();
+
+  client.close();
+
+  return {
+    props: {
+      meetupData: meetups.map((meetup) => ({
+        title: meetup.title,
+        address: meetup.address,
+        image: meetup.image,
+        id: meetup._id.toString(),
+      })),
+    },
+    revalidate: 1,
+  };
+}
+
 function showDetails(props) {
   const router = useRouter();
   const id = router.query.meetupId;
@@ -49,32 +75,6 @@ export async function getStaticPaths() {
     paths: meetups.map((meetup) => ({
       params: { meetupId: meetup._id.toString() },
     })),
-  };
-}
-
-export async function getStaticProps() {
-  //fetch data from an API
-  const client = await MongoClient.connect(
-    "mongodb+srv://swati:swati4s@cluster0.or8j6ek.mongodb.net/meetups"
-  );
-  const db = client.db();
-
-  const meetupsCollection = db.collection("meetups");
-
-  const meetups = await meetupsCollection.find().toArray();
-
-  client.close();
-
-  return {
-    props: {
-      meetupData: meetups.map((meetup) => ({
-        title: meetup.title,
-        address: meetup.address,
-        image: meetup.image,
-        id: meetup._id.toString(),
-      })),
-    },
-    revalidate: 1,
   };
 }
 
